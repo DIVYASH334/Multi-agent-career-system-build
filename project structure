@@ -1,0 +1,23 @@
+Project Structure
+
+MultiAgentCareerBuilder/
+│
+├── frontend/
+│   ├── src/
+│   ├── App.jsx
+│   └── package.json
+│
+├── backend/
+│   ├── agents/
+│   │   ├── resume_agent.py
+│   │   ├── skill_agent.py
+│   │   ├── career_agent.py
+│   │   ├── roadmap_agent.py
+│   │   └── interview_agent.py
+│   │
+│   ├── app.py
+│   ├── database.py
+│   ├── models.py
+│   └── requirements.txt
+│
+└── README.md
