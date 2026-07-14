@@ -29,8 +29,6 @@ body {
   color: var(--text-primary);
   font-family: var(--font-body);
   overflow-x: hidden;
-  margin: 0;
-  display: block;
 }
 
 /* Background Gradients */
@@ -172,7 +170,6 @@ body {
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
-  width: 100%;
 }
 
 /* Sidebar styling */
@@ -185,7 +182,6 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  flex-shrink: 0;
 }
 
 .logo-section {
@@ -289,7 +285,6 @@ body {
   flex-grow: 1;
   padding: 40px;
   overflow-y: auto;
-  background: #090d16;
 }
 
 /* View Header */
@@ -351,13 +346,13 @@ body {
   gap: 24px;
 }
 
+.col-8 { grid-column: span 8; }
 .col-4 { grid-column: span 4; }
 .col-6 { grid-column: span 6; }
-.col-8 { grid-column: span 8; }
 .col-12 { grid-column: span 12; }
 
 @media (max-width: 1024px) {
-  .col-4, .col-6, .col-8 {
+  .col-8, .col-4, .col-6 {
     grid-column: span 12;
   }
 }
@@ -460,7 +455,7 @@ body {
   stroke: url(#dial-gradient);
   stroke-width: 12;
   stroke-linecap: round;
-  transition: stroke-dashoffset 1s ease-out;
+  transition: stroke-dasharray 1s ease-out;
 }
 
 .dial-label {
