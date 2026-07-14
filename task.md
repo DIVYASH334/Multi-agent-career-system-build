@@ -1,0 +1,27 @@
+# Multi-Agent Career Recommendation and Guidance System Tasks
+
+- [x] Create Backend Directory and setup files
+  - [x] `backend/requirements.txt`
+  - [x] `backend/database.py`
+  - [x] `backend/models.py`
+  - [x] `backend/schemas.py`
+  - [x] `backend/auth.py`
+  - [x] `backend/agents/resume_parser.py`
+  - [x] `backend/agents/skill_gap_agent.py`
+  - [x] `backend/agents/career_agent.py`
+  - [x] `backend/agents/interview_agent.py`
+  - [x] `backend/agents/report_agent.py`
+  - [x] `backend/main.py`
+- [ ] Install Backend Dependencies and initialize database
+- [x] Create Frontend Directory and setup files
+  - [x] `frontend/package.json`
+  - [x] `frontend/index.html`
+  - [x] `frontend/src/main.jsx`
+  - [x] `frontend/src/App.jsx`
+  - [x] `frontend/src/styles.css`
+  - [x] `frontend/src/components/Login.jsx`
+  - [x] `frontend/src/components/Register.jsx`
+  - [x] `frontend/src/components/Dashboard.jsx`
+- [ ] Install Frontend Dependencies
+- [ ] Run Backend and Frontend servers
+- [ ] Verify complete user workflow and generate walkthrough
