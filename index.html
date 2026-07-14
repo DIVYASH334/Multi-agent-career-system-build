@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Multi-Agent Career Recommendation & Guidance System</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="/static/styles.css" />
+    
+    <!-- React & ReactDOM (production CDNs) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel Standalone for in-browser JSX parsing -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef } = React;
+
+      // ----------------- LOGIN COMPONENT -----------------
+      function Login({ onLoginSuccess, onNavigateToRegister }) {
+        const [email, setEmail] = useState('');
+        const [password, setPassword] = useState('');
+        const [error, setError] = useState('');
+        const [loading, setLoading] = useState(false);
+
+        const handleSubmit = async (e) => {
+          e.preventDefault();
+          setError('');
+          setLoading(true);
+
+          try {
+            const apiHost = window.location.origin;
+            const response = await fetch(`${apiHost}/auth/login`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.detail || 'Login failed');
+            }
+
+            localStorage.setItem('token', data.access_token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            
+            onLoginSuccess(data.access_token, data.user);
+          } catch (err) {
+            setError(err.message);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        return (
+          <div className="auth-wrapper">
+            <div className="auth-card">
+              <h2 className="auth-title">Welcome Back</h2>
+              <p className="auth-subtitle">Login to chat with your career advisor</p>
+              
+              {error && (
+                <div style={{ color: '#f43f5e', fontSize: '0.9rem', marginBottom: '16px', textAlign: 'center' }}>
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label className="form-label">Email Address</label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="name@example.com"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Password</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                <button type="submit" className="btn-primary" disabled={loading}>
+                  {loading ? 'Logging in...' : 'Sign In'}
+                </button>
+              </form>
+
+              <div className="auth-footer">
+                Don't have an account?{' '}
+                <span className="auth-link" onClick={onNavigateToRegister}>
+                  Register here
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // ----------------- REGISTER COMPONENT -----------------
+      function Register({ onRegisterSuccess, onNavigateToLogin }) {
+        const [name, setName] = useState('');
+        const [email, setEmail] = useState('');
+        const [password, setPassword] = useState('');
+        const [error, setError] = useState('');
+        const [success, setSuccess] = useState('');
+        const [loading, setLoading] = useState(false);
+
+        const handleSubmit = async (e) => {
+          e.preventDefault();
+          setError('');
+          setSuccess('');
+          setLoading(true);
+
+          try {
+            const apiHost = window.location.origin;
+            const response = await fetch(`${apiHost}/auth/register`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ name, email, password }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.detail || 'Registration failed');
+            }
+
+            setSuccess('Account created successfully! Redirecting to login...');
+            setTimeout(() => {
+              onRegisterSuccess();
+            }, 2000);
+          } catch (err) {
+            setError(err.message);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        return (
+          <div className="auth-wrapper">
+            <div className="auth-card">
+              <h2 className="auth-title">Create Account</h2>
+              <p className="auth-subtitle">Join the multi-agent career system</p>
+
+              {error && (
+                <div style={{ color: '#f43f5e', fontSize: '0.9rem', marginBottom: '16px', textAlign: 'center' }}>
+                  {error}
+                </div>
+              )}
+
+              {success && (
+                <div style={{ color: '#10b981', fontSize: '0.9rem', marginBottom: '16px', textAlign: 'center' }}>
+                  {success}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label className="form-label">Full Name</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Email Address</label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="name@example.com"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Password</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                <button type="submit" className="btn-primary" disabled={loading}>
+                  {loading ? 'Creating account...' : 'Sign Up'}
+                </button>
+              </form>
+
+              <div className="auth-footer">
+                Already have an account?{' '}
+                <span className="auth-link" onClick={onNavigateToLogin}>
+                  Sign In here
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // ----------------- DASHBOARD COMPONENT -----------------
+      function Dashboard({ token, user, onLogout }) {
+        const [activeTab, setActiveTab] = useState('overview');
+        const [loading, setLoading] = useState(false);
+        const [data, setData] = useState(null);
+        const [chatMessages, setChatMessages] = useState([]);
+        const [chatInput, setChatInput] = useState('');
+        const [chatLoading, setChatLoading] = useState(false);
+        const [questions, setQuestions] = useState([]);
+        const [openPrepIndex, setOpenPrepIndex] = useState(null);
+        const [uploadError, setUploadError] = useState('');
+        
+        const chatEndRef = useRef(null);
+        const fileInputRef = useRef(null);
+        const apiHost = window.location.origin;
+
+        useEffect(() => {
+          fetchLatestAnalysis();
+          fetchChatHistory();
+        }, []);
+
+        useEffect(() => {
+          chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, [chatMessages]);
+
+        const fetchLatestAnalysis = async () => {
+          setLoading(true);
+          try {
+            const response = await fetch(`${apiHost}/resume/latest`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (response.ok) {
+              const result = await response.json();
+              setData(result);
+              fetchInterviewPrep();
+            }
+          } catch (err) {
+            console.log('No latest analysis found or error:', err);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        const fetchChatHistory = async () => {
+          try {
+            const response = await fetch(`${apiHost}/career/chat/history`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (response.ok) {
+              const result = await response.json();
+              setChatMessages(result);
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        };
+
+        const fetchInterviewPrep = async () => {
+          try {
+            const response = await fetch(`${apiHost}/career/interview-prep`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (response.ok) {
+              const result = await response.json();
+              setQuestions(result);
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        };
+
+        const handleFileUpload = async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          if (file.type !== 'application/pdf') {
+            setUploadError('Only PDF files are supported.');
+            return;
+          }
+
+          setUploadError('');
+          setLoading(true);
+          const formData = new FormData();
+          formData.append('file', file);
+
+          try {
+            const response = await fetch(`${apiHost}/resume/upload`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              },
+              body: formData
+            });
+
+            const result = await response.json();
+            if (!response.ok) {
+              throw new Error(result.detail || 'Failed to upload resume.');
+            }
+
+            setData(result);
+            const prepRes = await fetch(`${apiHost}/career/interview-prep`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (prepRes.ok) {
+              const prepData = await prepRes.json();
+              setQuestions(prepData);
+            }
+            setActiveTab('overview');
+          } catch (err) {
+            setUploadError(err.message);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        const handleSendChatMessage = async (e) => {
+          e.preventDefault();
+          if (!chatInput.trim()) return;
+
+          const userMsgText = chatInput;
+          setChatInput('');
+          setChatMessages(prev => [...prev, { sender: 'user', message: userMsgText, timestamp: new Date().toISOString() }]);
+          setChatLoading(true);
+
+          try {
+            const response = await fetch(`${apiHost}/career/chat`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ message: userMsgText })
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              setChatMessages(prev => [...prev, result]);
+            }
+          } catch (err) {
+            console.error(err);
+          } finally {
+            setChatLoading(false);
+          }
+        };
+
+        const downloadReport = async () => {
+          try {
+            const response = await fetch(`${apiHost}/reports/download`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+
+            if (!response.ok) throw new Error('Download failed');
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Career_Roadmap_Report.pdf';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          } catch (err) {
+            alert('Error downloading report: ' + err.message);
+          }
+        };
+
+        const radius = 80;
+        const stroke = 12;
+        const normalizedRadius = radius - stroke * 2;
+        const circumference = normalizedRadius * 2 * Math.PI;
+        const strokeDashoffset = data ? circumference - (data.ats_score / 100) * circumference : circumference;
+
+        return (
+          <div className="dashboard-layout">
+            {/* Sidebar */}
+            <div className="sidebar">
+              <div>
+                <div className="logo-section">
+                  <div className="logo-icon">🚀</div>
+                  <span className="logo-text">Career Agent</span>
+                </div>
+
+                <ul className="menu-list">
+                  <li 
+                    className={`menu-item ${activeTab === 'overview' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('overview')}
+                  >
+                    📊 Overview
+                  </li>
+                  <li 
+                    className={`menu-item ${activeTab === 'skill_gap' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('skill_gap')}
+                  >
+                    🔍 Skill Gap
+                  </li>
+                  <li 
+                    className={`menu-item ${activeTab === 'pathways' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('pathways')}
+                  >
+                    🗺️ Career Pathways
+                  </li>
+                  <li 
+                    className={`menu-item ${activeTab === 'interview_prep' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('interview_prep')}
+                  >
+                    🧠 Interview Prep
+                  </li>
+                  <li 
+                    className={`menu-item ${activeTab === 'chat' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('chat')}
+                  >
+                    💬 Agent Advisor
+                  </li>
+                </ul>
+              </div>
+
+              <div className="user-profile-section">
+                <div className="user-profile-info">
+                  <span className="profile-name">{user?.name}</span>
+                  <span className="profile-email">{user?.email}</span>
+                </div>
+                <button className="btn-logout" onClick={onLogout}>Logout</button>
+              </div>
+            </div>
+
+            {/* Main Panel Content */}
+            <div className="main-content">
+              {loading && (
+                <div className="loader-wrapper" style={{ minHeight: '60vh' }}>
+                  <div className="spinner"></div>
+                  <p>Analyzing resume using multi-agent network...</p>
+                </div>
+              )}
+
+              {!data && !loading && (
+                <div style={{ maxWidth: '650px', margin: '60px auto' }}>
+                  <div className="view-header">
+                    <h1 className="view-title">Upload Your Resume</h1>
+                    <p className="view-subtitle">Upload your PDF resume to trigger career optimization mapping.</p>
+                  </div>
+
+                  {uploadError && (
+                    <div style={{ color: '#f43f5e', fontSize: '0.95rem', marginBottom: '16px', textAlign: 'center' }}>
+                      {uploadError}
+                    </div>
+                  )}
+
+                  <div className="panel-card">
+                    <div className="upload-zone" onClick={() => fileInputRef.current.click()}>
+                      <div className="upload-icon">📄</div>
+                      <h3>Drag & Drop PDF or click to browse</h3>
+                      <p className="upload-text">Maximum size 5MB. Standard single column layouts recommended.</p>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="file-input" 
+                        accept="application/pdf"
+                        onChange={handleFileUpload}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {data && !loading && (
+                <div>
+                  {activeTab === 'overview' && (
+                    <div>
+                      <div className="view-header">
+                        <h1 className="view-title">Welcome Back, {user?.name}</h1>
+                        <p className="view-subtitle">Here is the multi-agent assessment of your resume.</p>
+                      </div>
+
+                      <div className="stats-grid">
+                        <div className="stat-card">
+                          <span className="stat-label">ATS score</span>
+                          <span className="stat-value primary">{data.ats_score}/100</span>
+                        </div>
+                        <div className="stat-card">
+                          <span className="stat-label">Target Role</span>
+                          <span className="stat-value secondary">{data.career_recommendation.recommended_role}</span>
+                        </div>
+                        <div className="stat-card">
+                          <span className="stat-label">Match Alignment</span>
+                          <span className="stat-value success">{data.career_recommendation.match_percentage}%</span>
+                        </div>
+                        <div className="stat-card">
+                          <span className="stat-label">Word Count</span>
+                          <span className="stat-value" style={{ color: '#e2e8f0' }}>{data.words}</span>
+                        </div>
+                      </div>
+
+                      <div className="dashboard-grid">
+                        <div className="col-4">
+                          <div className="panel-card">
+                            <h3 className="panel-title">Resume Score Dial</h3>
+                            <div className="chart-container">
+                              <svg height={radius * 2} width={radius * 2} className="dial-svg">
+                                <defs>
+                                  <linearGradient id="dial-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stopColor="#6366f1" />
+                                    <stop offset="100%" stopColor="#a855f7" />
+                                  </linearGradient>
+                                </defs>
+                                <circle
+                                  className="dial-bg"
+                                  cx={radius}
+                                  cy={radius}
+                                  r={normalizedRadius}
+                                />
+                                <circle
+                                  className="dial-progress"
+                                  cx={radius}
+                                  cy={radius}
+                                  r={normalizedRadius}
+                                  strokeDasharray={circumference + ' ' + circumference}
+                                  style={{ strokeDashoffset }}
+                                />
+                              </svg>
+                              <div className="dial-label">
+                                {data.ats_score}%
+                                <div className="dial-subtext">ATS Score</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="col-8">
+                          <div className="panel-card">
+                            <h3 className="panel-title">Extracted Skills</h3>
+                            <p style={{ color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                              The Resume Parser Agent extracted the following technical skills from your resume:
+                            </p>
+                            <div className="skills-list">
+                              {data.skills_extracted.map((skill, idx) => (
+                                <span key={idx} className="skill-tag">{skill}</span>
+                              ))}
+                              {data.skills_extracted.length === 0 && (
+                                <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>No technical skills parsed. Upload a richer resume.</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="col-12">
+                          <div className="panel-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <h3>Need an updated report?</h3>
+                              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
+                                Export the full AI recommendation plan including gaps, roadmaps, and interview preparations as PDF.
+                              </p>
+                            </div>
+                            <button className="btn-primary" style={{ width: 'auto', padding: '12px 24px' }} onClick={downloadReport}>
+                              📥 Download PDF Roadmap
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'skill_gap' && (
+                    <div>
+                      <div className="view-header">
+                        <h1 className="view-title">Skill Gap Analysis</h1>
+                        <p className="view-subtitle">Compare your profile against the required skill benchmarks for <b>{data.career_recommendation.recommended_role}</b>.</p>
+                      </div>
+
+                      <div className="dashboard-grid">
+                        <div className="col-6">
+                          <div className="panel-card">
+                            <h3 className="panel-title">Matching Skills ({data.skills_extracted.length})</h3>
+                            <div className="skills-list">
+                              {data.skills_extracted.map((skill, idx) => (
+                                <span key={idx} className="skill-tag">{skill}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="col-6">
+                          <div className="panel-card">
+                            <h3 className="panel-title">Missing Target Skills ({data.career_recommendation.missing_skills.length})</h3>
+                            <div className="skills-list">
+                              {data.career_recommendation.missing_skills.map((skill, idx) => (
+                                <span key={idx} className="skill-tag missing">{skill}</span>
+                              ))}
+                              {data.career_recommendation.missing_skills.length === 0 && (
+                                <span style={{ color: 'var(--color-success)', fontWeight: 'bold' }}>All target skills achieved! Excellent match!</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="col-12">
+                          <div className="panel-card">
+                            <h3 className="panel-title">Agent Learning Pathway Suggestions</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                              {data.career_recommendation.learning_path.map((path, idx) => (
+                                <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px', border: '1px solid var(--card-border)' }}>
+                                  <strong style={{ color: 'var(--color-primary)' }}>Step {idx + 1}:</strong> {path}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'pathways' && (
+                    <div>
+                      <div className="view-header">
+                        <h1 className="view-title">Career Milestones Roadmap</h1>
+                        <p className="view-subtitle">A step-by-step career acceleration program designed by the Career Agent.</p>
+                      </div>
+
+                      <div className="panel-card">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', borderBottom: '1px solid var(--card-border)', paddingBottom: '16px' }}>
+                          <h3 style={{ fontSize: '1.4rem' }}>{data.career_recommendation.recommended_role} Roadmap</h3>
+                          <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px', fontSize: '0.9rem' }} onClick={downloadReport}>
+                            Export Roadmap PDF
+                          </button>
+                        </div>
+
+                        <div className="roadmap-md">
+                          <div style={{ whiteSpace: 'pre-line' }}>
+                            {data.career_recommendation.roadmap}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'interview_prep' && (
+                    <div>
+                      <div className="view-header">
+                        <h1 className="view-title">Custom Interview Prep</h1>
+                        <p className="view-subtitle">Tailored technical interview questions generated by the AI Interview Agent to test your knowledge.</p>
+                      </div>
+
+                      <div className="panel-card">
+                        <h3 className="panel-title" style={{ marginBottom: '24px' }}>Practice Questions</h3>
+
+                        <div className="prep-grid">
+                          {questions.map((qna, idx) => (
+                            <div 
+                              key={idx} 
+                              className="prep-card" 
+                              onClick={() => setOpenPrepIndex(openPrepIndex === idx ? null : idx)}
+                            >
+                              <div className="prep-question">
+                                <span>Q{idx + 1}: {qna.question}</span>
+                                <span>{openPrepIndex === idx ? '▲' : '▼'}</span>
+                              </div>
+                              {openPrepIndex === idx && (
+                                <div className="prep-answer">
+                                  <strong>Answer Guidance:</strong><br />
+                                  {qna.answer}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {questions.length === 0 && (
+                            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
+                              Generating customized prep questions...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'chat' && (
+                    <div>
+                      <div className="view-header">
+                        <h1 className="view-title">AI Career Advisor Chat</h1>
+                        <p className="view-subtitle">Chat directly with your Career Advisor Agent regarding learning paths, salaries, resumes, and prep tips.</p>
+                      </div>
+
+                      <div className="chat-container">
+                        <div className="chat-history">
+                          <div className="chat-bubble advisor">
+                            Hello {user?.name}! I am your AI Career Advisor. Ask me anything about job roles, resumes, interview preparation, or learning roadmaps!
+                          </div>
+
+                          {chatMessages.map((msg, idx) => (
+                            <div key={idx} className={`chat-bubble ${msg.sender === 'user' ? 'user' : 'advisor'}`}>
+                              {msg.message}
+                            </div>
+                          ))}
+
+                          {chatLoading && (
+                            <div className="chat-bubble advisor" style={{ fontStyle: 'italic', color: 'var(--text-secondary)' }}>
+                              Thinking...
+                            </div>
+                          )}
+                          <div ref={chatEndRef} />
+                        </div>
+
+                        <form className="chat-input-area" onSubmit={handleSendChatMessage}>
+                          <input 
+                            type="text" 
+                            className="chat-input"
+                            value={chatInput}
+                            onChange={(e) => setChatInput(e.target.value)}
+                            placeholder="Ask about closing your skill gap, resume improvements, etc..."
+                            disabled={chatLoading}
+                          />
+                          <button type="submit" className="btn-send" disabled={chatLoading}>Send</button>
+                        </form>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      // ----------------- MAIN APP COMPONENT -----------------
+      function App() {
+        const [view, setView] = useState('login');
+        const [token, setToken] = useState(null);
+        const [user, setUser] = useState(null);
+        const [authLoading, setAuthLoading] = useState(true);
+
+        useEffect(() => {
+          const storedToken = localStorage.getItem('token');
+          const storedUser = localStorage.getItem('user');
+
+          if (storedToken && storedUser) {
+            setToken(storedToken);
+            setUser(JSON.parse(storedUser));
+            setView('dashboard');
+          }
+          setAuthLoading(false);
+        }, []);
+
+        const handleLoginSuccess = (newToken, newUser) => {
+          setToken(newToken);
+          setUser(newUser);
+          setView('dashboard');
+        };
+
+        const handleLogout = () => {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setToken(null);
+          setUser(null);
+          setView('login');
+        };
+
+        if (authLoading) {
+          return (
+            <div className="app-container">
+              <div className="gradient-bg"></div>
+              <div className="loader-wrapper" style={{ minHeight: '100vh' }}>
+                <div className="spinner"></div>
+                <p>Loading application session...</p>
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div className="app-container">
+            <div className="gradient-bg"></div>
+
+            {view === 'login' && (
+              <Login 
+                onLoginSuccess={handleLoginSuccess} 
+                onNavigateToRegister={() => setView('register')} 
+              />
+            )}
+
+            {view === 'register' && (
+              <Register 
+                onRegisterSuccess={() => setView('login')} 
+                onNavigateToLogin={() => setView('login')} 
+              />
+            )}
+
+            {view === 'dashboard' && (
+              <Dashboard 
+                token={token} 
+                user={user} 
+                onLogout={handleLogout} 
+              />
+            )}
+          </div>
+        );
+      }
+
+      // Render the App
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
